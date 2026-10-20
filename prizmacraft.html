@@ -6,6 +6,8 @@
 <title>PrizmaCRAFT – Ahol az ötletek formát öltenek</title>
 <meta name="description" content="Egyedi ajándéktárgyak és használati tárgyak 3D nyomtatással és lézervágással.">
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- EmailJS betöltése -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <script>
@@ -511,14 +513,70 @@
       : 'Kattints ide a fájl kiválasztásához';
   });
 
-  // --- Űrlap elküldése (demó: backend nélkül) ---
-  document.getElementById('offer-form').addEventListener('submit', e => {
-    e.preventDefault();
-    e.target.reset();
+  // --- Űrlap elküldése EmailJS segítségével ---
+
+const offerForm = document.getElementById('offer-form');
+
+offerForm.addEventListener('submit', async (e) => {
+  // Megakadályozzuk az oldal újratöltését.
+  e.preventDefault();
+
+  // Megkeressük a küldés gombot.
+  const submitButton = offerForm.querySelector('button[type="submit"]');
+
+  // Elmentjük az eredeti gombfeliratot.
+  const originalText = submitButton.textContent;
+
+  // Jelezzük, hogy a küldés folyamatban van.
+  submitButton.disabled = true;
+  submitButton.textContent = 'Küldés folyamatban...';
+
+  // Összegyűjtjük az űrlap adatait.
+  const templateParams = {
+    from_name: document.getElementById('name').value.trim(),
+    from_email: document.getElementById('email').value.trim(),
+    technology: offerForm.querySelector('input[name="tech"]:checked')?.value || '',
+    message: document.getElementById('idea').value.trim()
+  };
+
+  try {
+    // E-mail küldése az EmailJS-en keresztül.
+    await emailjs.send(
+      'service_fc4w9iy',
+      'template_9fwlhfs',
+      templateParams,
+      {
+        publicKey: 'Bh6mrccSqG__oEkmI'
+      }
+    );
+
+    // Csak sikeres küldés esetén töröljük az űrlapot.
+    offerForm.reset();
+
+    // Frissítjük a fájlfeltöltés feliratát.
     fileLabel.textContent = 'Kattints ide a fájl kiválasztásához';
+
+    // Megjelenítjük a sikeres küldés üzenetét.
     document.getElementById('form-success').classList.remove('hidden');
-    setTimeout(() => document.getElementById('form-success').classList.add('hidden'), 6000);
-  });
+
+    // Hat másodperc után elrejtjük az üzenetet.
+    setTimeout(() => {
+      document.getElementById('form-success').classList.add('hidden');
+    }, 6000);
+
+  } catch (error) {
+    // Hibás küldés esetén nem töröljük az űrlap tartalmát.
+    console.error('EmailJS küldési hiba:', error);
+
+    alert('Az üzenetet nem sikerült elküldeni. Kérjük, próbáld újra!');
+
+  } finally {
+    // Visszaállítjuk a gombot.
+    submitButton.disabled = false;
+    submitButton.textContent = originalText;
+  }
+});
+ 
 
   // --- Init ---
   renderProducts();
