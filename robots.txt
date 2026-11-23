@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://plaszlo14.github.io/PrizmaCRAFT_/sitemap.xml
